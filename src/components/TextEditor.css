@@ -1,0 +1,44 @@
+.quill {
+    height: 100%;
+    width: auto;
+    border: none;
+}
+
+.quill * {
+    border: none;
+}
+
+#time {
+    width: fit-content;
+}
+
+.note-editor form {
+    display: flex;
+    align-items: flex-start;
+}
+
+.note-editor .note-title {
+    border-bottom: 1px solid #ccc;
+}
+
+
+.note-editor {
+    width: 100%;
+    height: 80%;
+    border: none;
+}
+
+#title::placeholder {
+    font-size: 25px;
+    font-weight: normal;
+}
+
+.ql-toolbar.ql-snow {
+    border-left: none;
+    border-right: none;
+    border-top: none;
+}
+
+.ql-container.ql-snow {
+    border: none;
+}

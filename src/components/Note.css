@@ -1,0 +1,49 @@
+
+.notes-list .new-note {
+    display: flex;
+    flex-direction: column;
+    min-height: 80px;
+    height: min-content;
+    max-height: 100px;
+    max-width: 100%;
+    color: black;
+    justify-content: flex-start;
+
+    border-bottom: 1px solid #ccc;
+    
+    overflow: hidden;
+    padding: 1px;
+    
+    
+}
+
+.notes-list .note-content{
+    flex-direction: row;
+    flex-wrap: wrap;
+    display: flex;
+    
+}
+
+.notes-list .note-content:first-child {
+    white-space: nowrap;
+    overflow:hidden;
+    text-overflow: ellipsis;
+    flex-basis: 50%;
+    min-width: 0;
+}
+
+.notes-list .new-note.selected {
+    background-color: rgb(67,60,83);
+    color: white;
+}
+
+.notes-list .note-title {
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.notes-list .note-title h4 {
+    font-size: 15px;
+    padding: 0px 0px;
+}
