@@ -58,3 +58,5 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+# Local Netlify folder
+.netlify
