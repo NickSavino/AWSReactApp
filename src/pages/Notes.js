@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useNavigate, useOutletContext, useParams, useLocation, parsePath } from 'react-router-dom';
 
 import uuid4 from 'uuid4';
 
@@ -13,11 +13,13 @@ import '../components/NoteNavigator.css'
 
 function Notes() {
 
-    
-
     const navigate = useNavigate();
 
     const noteIndex = useParams()["index"];
+
+    const location = useLocation();
+
+    const [login, logOut, user, profile, setProfile] = useOutletContext();
 
     const [notes, setNotes] = useState([]);
 
@@ -28,67 +30,93 @@ function Notes() {
         window.localStorage.setItem("Notes", JSON.stringify(notes));
     }
 
+   
+
     const [currentNote, setCurrentNote] = useState({});
 
     useEffect(() => {
         //keeps track of current note
         if (noteIndex !== undefined && notes.length !== 0) {
-            setCurrentNote(notes[noteIndex - 1].props["noteData"]);
-
-            
+            notes.forEach((note) => {
+                console.log(note.props.index)
+                console.log(noteIndex)
+                if (note.props.index === noteIndex) {
+                    console.log(note)
+                    setCurrentNote(note);
+                    console.log(currentNote)
+                    return;
+                }
+            })
+  
         }
         
-        
 
-    }, [noteIndex])
+    }, [noteIndex, notes])
 
     useEffect(() => {
         //updates note list when notes are added or deleted
-        const temp_notes = JSON.parse(window.localStorage.getItem("Notes"));
-        axios.get('https://sgejw7hxcl2axnzjjdmlmai6ua0wghyw.lambda-url.ca-central-1.on.aws/?email=nicksavino2@gmail.com')
-        .then(response => console.log(response.data));
-        const updated_notes = [];
-        for (const note in temp_notes) {  
-            updated_notes.push(<Note key={note} noteData={temp_notes[note].props["noteData"]}></Note>)
-        }
-        setNotes(updated_notes);
+
         
+
+        const getOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                
+            },
+        }
+        console.log(profile.email)
+        if (profile.email === undefined) {
+            logOut();
+            return;
+        }
+        const url = 'https://sgejw7hxcl2axnzjjdmlmai6ua0wghyw.lambda-url.ca-central-1.on.aws/?email=' + profile.email;
+        fetch(url, getOptions)
+        .then(res =>  res.json())
+        .then(data => {
+            console.log("data:" + JSON.stringify(data.notes))
+            let new_notes = data.notes;
+            console.log("new_notes:" + new_notes)
+            const updated_notes =  new_notes.map((noteData, index) => {
+                console.log(noteData);
+                return <Note index = {noteData.index} key={noteData.id} noteData={noteData}></Note>
+                })
+            console.log(updated_notes)
+            setNotes(updated_notes)
+            console.log("notes:" + notes)
+        })
+        .catch(err => console.log(err));
+        
+        
+        console.log(notes)
+
+        if (profile === []) {
+            logOut();
+        }
+
+        if (notes.at(noteIndex) === undefined) {
+            navigate("/notes");
+        }
+
     }, [])
 
     useEffect(() => {
         //displays 'No Notes Yet if notes is null
-        if (notes === undefined || notes.length === 0) {
+        
+        if (notes === [] || notes.length === 0) {
             setDisplay(<div id="empty-notes"><h3>No Notes Yet</h3></div>)
         }
         else {
             setDisplay(notes)
         }
-    }, [notes])
+    }, [notes, noteIndex, currentNote])
 
 
-    useEffect(() => {
-        
-        if (noteIndex === undefined) {
-            //returns if no note index is selected
-            return
-        }
-        if (JSON.parse(window.localStorage.getItem("Notes"))[noteIndex-1] === undefined) {
-            //navigates to home page if note index is null
-            navigate("../notes")
-        }
-    }, [])
+  
 
     const addNote = () => {
         //adds note to notes array. does not store in local storage
-        
-        //returns if note isn't saved
-        if (JSON.parse(window.localStorage.getItem("Notes")).length !== notes.length) {
-            if (JSON.parse(window.localStorage.getItem("Notes"))[noteIndex - 1] === undefined && (notes.length !== 0)) {
-                window.alert("Please save your note before adding a new one.");
-                return;
-            }
-        }
-        
+
         const noteData = {
             id: uuid4(),
             title: "New Note",
@@ -96,16 +124,36 @@ function Notes() {
             content: "",
             index: notes.length + 1,
         }
-        
-        setCurrentNote(noteData);
 
+        //returns if note isn't saved
+        if (location.pathname === `/notes/${noteIndex}/edit`) {
+ 
+            if (notes.at(noteIndex) === undefined) {
+                window.alert("Please save your note before adding a new one.");
+                return;
+            }
+        }
+        console.log(currentNote)
+        notes.forEach((note) => {
+            console.log(note.props.index)
+            console.log(noteData.index)
+            if (note.props.index == noteData.index) {
+                console.log("MATCH MUST UPDATE")
+                noteData.index += 1;
+            }
+        })
+
+        const new_note = <Note index = {noteData.index} key={noteData.id} noteData={noteData}></Note>
+        setCurrentNote(new_note);
+        console.log(currentNote)
+        //console.log(notes)
         setNotes([
             ...notes,
-            <Note key={notes.length} noteData={noteData}></Note>
+            new_note
           ]);
+        
           
-          
-        navigate(`${noteData.index}/edit`);
+        navigate(`${new_note.props.index}/edit`);
 
     }
 
@@ -124,7 +172,13 @@ function Notes() {
         </div>
             
             <div className='note-header'>    
-                <Outlet context={[notes, setNotes]}></Outlet>
+                <Outlet context={[
+                    notes, setNotes,
+                    profile,
+                    user,
+                    currentNote
+                ]}>
+                </Outlet>
             </div>
             
             

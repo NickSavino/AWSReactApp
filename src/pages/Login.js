@@ -15,7 +15,7 @@ function Login() {
 
     return (
         <div id="login-button-container">
-            <GoogleLogin onSuccess={login} onFailure={errorMessage} />
+            <GoogleLogin onSuccess={() => login()} onFailure={errorMessage} />
         </div>
     )
 

@@ -6,14 +6,15 @@ import sys
 import time
 import uuid
 import json
+import requests
 
 sys.path.append("functions/delete-note")
 
 
-def test_save_item():
+def test_save_note():
 
     item = {
-    "email": "nicksavino2@gmail.com",
+
     "id": str(uuid.uuid4()),
     "title": "test title",
     "content": "test content",
@@ -21,40 +22,43 @@ def test_save_item():
     "index": 0,
     }
 
-    event = {
-        "httpMethod": "POST",
-        "queryStringParameters": {
-            "note": item
-        }
+    url = "https://gf4wtjogzcubvg7ix4262gphjm0coeto.lambda-url.ca-central-1.on.aws/"
+    params = {
+        "email": "nicksavino2@gmail.com"
     }
-    res = save_handler(event, None)
-    assert res is not None
-    assert res["statusCode"] == 200
-    assert res["body"] == "Note Saved"
+    headers = {
+        "Content-Type": "application/json",
+    }
+
+    res = requests.post(url, params=params, headers=headers, data=json.dumps({"note": item}))
+    assert res.status_code == 200
 
     test_item = table.get_item(Key={"email": item["email"], "id": item["id"]})
     assert "Item" in test_item
     
 
 def test_get_notes():
-    event = {
-        "httpMethod": "GET",
-        "queryStringParameters": {
-            "email": "nicksavino2@gmail.com"
-        }
+    url = "https://sgejw7hxcl2axnzjjdmlmai6ua0wghyw.lambda-url.ca-central-1.on.aws/"
+    params = {
+        "email": "nicksavino2@gmail.com"
     }
-    res = get_handler(event, None)
-    assert res is not None
-    assert res["statusCode"] == 200
-    print(res["body"])
-    notes = json.loads(res["body"])
+    headers = {
+        "Content-Type": "application/json",
+    }
+
+    res = requests.get(url, params=params, headers=headers)
+    print(res)
+    #res = get_handler(event, None)
+    
+    assert res.status_code == 200
+    print(res.json())
+    notes = res.json()
     assert len(notes["notes"]) > 0
     
 
 
 def test_update_notes():
     item = {
-    "email": "nicksavino2@gmail.com",
     "id": str(uuid.uuid4()),
     "title": "test title",
     "content": "test content",
@@ -72,7 +76,6 @@ def test_update_notes():
     time.sleep(1)
 
     updated_item = {
-        "email": "nicksavino2@gmail.com",
         "id": item["id"],
         "title": "updated title test new",
         "content": "updated content new",
@@ -92,9 +95,8 @@ def test_update_notes():
     assert res["body"] == "Note Updated"
 
 
-def test_delete_notes():
+def test_delete_note():
     item = {
-    "email": "nicksavino2@gmail.com",
     "id": str(uuid.uuid4()),
     "title": "test title",
     "content": "test content",
@@ -102,19 +104,24 @@ def test_delete_notes():
     "index": 0,
     }
 
-    event = {
-        "httpMethod": "DELETE",
-        "queryStringParameters": {
-            "email": item["email"],
-            "id": item["id"]
-        }
+    params = {
+        "email": "nicksavino2@gmail.com"
     }
-    res = delete_handler(event, None)
+    headers = {
+        "Content-Type": "application/json",
+    }
+    
+
+    url = "https://gf4wtjogzcubvg7ix4262gphjm0coeto.lambda-url.ca-central-1.on.aws/"
+    res = requests.post(url, params=params, headers=headers, data=json.dumps({"id": item}))
+    assert res.status_code == 200
+    url = "https://ewizljkbzulolp2odlimtrdakm0snxnp.lambda-url.ca-central-1.on.aws/"
+    
+    res = requests.delete(url=url, params=params, headers=headers, data=json.dumps({"note": item}))
     print(res)
     time.sleep(2)
-    assert res is not None
-    assert res["statusCode"] == 200
-    assert res["body"] == "Note Deleted"
+    assert res.status_code == 200
+    assert res.raw.read() == b"Note Deleted"
 
     test_item = table.get_item(Key={"email": item["email"], "id": item["id"]})
     assert "Item" not in test_item

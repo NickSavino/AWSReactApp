@@ -1,9 +1,9 @@
 import { getNodeText } from '@testing-library/react';
 import { wait } from '@testing-library/user-event/dist/utils';
-import { useEffect, useState} from 'react';
+import { Profiler, useEffect, useState} from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams, useLocation } from 'react-router-dom';
 
 import Note from './Note';
 
@@ -14,32 +14,32 @@ function TextEditor() {
   const navigate = useNavigate();
   const noteIndex = useParams()["index"];
 
+  const location = useLocation();
   //note list
 
   const [notes, setNotes] = useOutletContext();
-  const [currentNote, setCurrentNote] = useState({});
+  // const [currentNote, setCurrentNote] = useState({});
+
+  //user and profile data
+  const [logOut, user, profile, setProfile, currentNote] = useOutletContext();
 
   //note parameters
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(currentNote.title);
   const [date, setDate] = useState("");
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(currentNote.content);
 
   useEffect(() => {
-     
-    if (currentNote !== undefined && notes.length !== 0) {
-        setCurrentNote(notes[noteIndex - 1].props["noteData"]) 
-      }
-      //update elements on refresh
-      if (content === undefined || content === "") {
-        setContent(currentNote.content)
-      }
-      if ((title === undefined || title === "") && (date === undefined || date == "")) {
-        setTitle(currentNote.title);
-        let newDate = formatDate(currentNote.date);
-        setDate(newDate);
-      }
+    
+    if (currentNote !== undefined) {
+      setTitle(currentNote.props.noteData.title);
+      setContent(currentNote.props.noteData.content);
+      let newDate = formatDate(currentNote.props.noteData.date);
+      setDate(newDate);
+    }
 
-  }, )
+    
+      
+  }, [location])
 
 
 
@@ -66,21 +66,53 @@ function TextEditor() {
     //saves note to local storage
 
     //fetches note from notes list based on current params selection
-    const saved_note = notes.at(noteIndex - 1);
-    
+   
+    console.log(currentNote);
     //updates note data
-    saved_note.props.noteData.title = title;
-    saved_note.props.noteData.date = date;
-    saved_note.props.noteData.content = content;
+    currentNote.props.noteData.title = title;
+    currentNote.props.noteData.date = date;
+    currentNote.props.noteData.content = content;
 
     //updates note list with new note data
-    notes[noteIndex - 1] = saved_note;
+    notes[noteIndex - 1] = currentNote;
 
     //saves note list to local storage and updates state
-    window.localStorage.setItem("Notes", JSON.stringify(notes))
-    setNotes(notes);
+    //window.localStorage.setItem("Notes", JSON.stringify(notes))
+    //setNotes(notes);
+
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: currentNote.props.noteData.id,
+        title: title,
+        date: date,
+        content: content,
+        index: noteIndex,
+      }),
+    }
+
+      
+    console.log("Email in texteditor: " + profile.email);
+    console.log("Token in texteditor: " + user);
+    fetch("https://gf4wtjogzcubvg7ix4262gphjm0coeto.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json()
+      })
+    .then((data) => {
+      console.log("Success");
+      console.log(data);
+    })
+    .catch(error => console.log(error));
 
     //returns to note list and viewer
+    const newNotes = [...new Set(notes)];
+    setNotes(newNotes);
     navigate("../")
   }
 
@@ -93,11 +125,34 @@ function TextEditor() {
   };
 
   const deleteNote = () => {
+
+    //deletes note from database
+    const options = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: currentNote.id,
+      }),
+    }
+
+    fetch("https://ewizljkbzulolp2odlimtrdakm0snxnp.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Success");
+      console.log(data);
+    })
+    .catch(error => console.log(error));
+
+
+
     //deletes note from local storage
-    const new_notes = notes.pop(noteIndex - 1);
-    setNotes(new_notes);
-    window.localStorage.setItem("Notes", JSON.stringify(notes));
-    navigate("/");
+    // const new_notes = notes.pop(noteIndex - 1);
+    // setNotes(new_notes);
+    // window.localStorage.setItem("Notes", JSON.stringify(notes));
+    setNotes(notes.filter((note) => note.props.noteData.id !== currentNote.id))
+    navigate("/notes");
   }
 
   const handleTitle = (input) => {

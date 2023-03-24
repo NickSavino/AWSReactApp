@@ -5,6 +5,7 @@ import 'react-quill/dist/quill.snow.css';
 
 
 import './TextViewer.css'
+import { wait } from '@testing-library/user-event/dist/utils';
 
 
 function TextViewer() {
@@ -14,17 +15,51 @@ function TextViewer() {
   
   const [notes, setNotes] = useOutletContext();
   const [currentNote, setCurrentNote] = useState({});
+  const [selectedNote, setSelectedNote] = useState({});
+
+  //user and profile data
+  const [logOut, user, profile, setProfile] = useOutletContext();
 
   const [title, setTitle] = useState("");
   const [date, setDate] = useState("");
   const [content, setContent] = useState("");
 
+
+  useEffect(() => {
+    //initial load
+    if (notes === []) {
+      navigate("../");
+    }
+  }, [])
+
   useEffect(() => {
     //updates title on load
+      
+    if (currentNote === {} && notes.length !== 0) {
+      notes.forEach((note) => {
+          console.log(note.props.index)
+          console.log(noteIndex)
+          if (note.props.index === noteIndex) {
+              console.log(note)
+              setCurrentNote(note);
+              console.log(currentNote)
+              return;
+          }
+      })
+    }
+
+    console.log(notes)
+    console.log(currentNote)
+    const noteToSelect = notes.find((note) => {
+      console.log(note)
+      console.log(note.props.index)
+      console.log(noteIndex)
+      return note.props.index == noteIndex;
+    });
+   
+    console.log(noteToSelect)
     
-      if (currentNote !== undefined && notes.length !== 0) {
-        setCurrentNote(notes[noteIndex - 1].props["noteData"]) 
-      }
+    
 
       const options = {
         year: "numeric",
@@ -34,13 +69,21 @@ function TextViewer() {
         minute: "numeric",
     };
 
-    setTitle(currentNote.title);
-    const datetime = new Date(currentNote.date).toLocaleString("en-US", options);
+    if (noteToSelect) {
+      setCurrentNote(noteToSelect);
+      console.log(currentNote)
+      setTitle(noteToSelect.props.noteData.title);
+      const datetime = new Date(noteToSelect.props.noteData.date).toLocaleString("en-US", options);
+      
+      setDate(datetime);
+      setContent(noteToSelect.props.noteData.content);
+      setSelectedNote(noteToSelect);
+    }
+      
+   
     
-    setDate(datetime);
-    setContent(currentNote.content);
     
-  }, )
+  }, [currentNote, notes, noteIndex])
 
   const editNote = () => {
       navigate("./edit");
@@ -58,12 +101,43 @@ function TextViewer() {
     
   };
 
+ 
   const deleteNote = () => {
-    const new_notes = notes.pop(noteIndex - 1);
-    setNotes(new_notes);
-    window.localStorage.setItem("Notes", JSON.stringify(notes))
-    navigate("/")
+
+    const noteToSelect = notes.find((note) => note.props.index === noteIndex);
+    if (noteToSelect) {
+      setCurrentNote(noteToSelect);
+      console.log(currentNote)
+    }
+    //deletes note from database
+    const options = {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+
+      },
+      body: JSON.stringify({
+        id: currentNote.props.noteData.id,
+      }),
+    }
+
+    fetch("https://ewizljkbzulolp2odlimtrdakm0snxnp.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json()
+    })
+    .then((data) => {
+      console.log("Success");
+      console.log(data);
+    })
+    .catch(error => console.log(error));
+
+    setNotes(notes.filter((note) => note.props.noteData.id !== currentNote.id))
+    navigate("/notes")
   }
+  
 
     
     return (

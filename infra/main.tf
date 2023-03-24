@@ -86,6 +86,35 @@ resource "aws_iam_role_policy_attachment" "url-invoke" {
   policy_arn = aws_iam_policy.url-invoke.arn
 }
 
+resource "aws_iam_policy" "dynamo-permissions" {
+  name = "dynamo-permissions"
+  description = "Allow lambda to access dynamo db"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "dynamodb:PutItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": "arn:aws:dynamodb:ca-central-1:214547864366:table/lotion-30129329"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "dynamo-permissions" {
+  role       = aws_iam_role.lotion-plus.name
+  policy_arn = aws_iam_policy.dynamo-permissions.arn
+}
+
 #  delete note lambda function
 resource "aws_lambda_function" "delete-note" {
   s3_bucket = aws_s3_bucket.lotion-plus.bucket
@@ -108,9 +137,10 @@ resource "aws_lambda_function_url" "delete-url" {
 
   cors {
     allow_credentials = true
-    allow_origins = ["*"]
+    allow_origins = ["http://localhost:3000"]
     allow_methods = ["DELETE"]
     expose_headers = ["keep-alive", "date"]
+    allow_headers = ["content-type", "authorization"]
   }
 }
 
@@ -139,8 +169,9 @@ resource "aws_lambda_function_url" "get-url" {
 
   cors {
     allow_credentials = true
-    allow_origins = ["*"]
+    allow_origins = ["http://localhost:3000"]
     allow_methods = ["GET"]
+    allow_headers = ["content-type", "authorization"]
     expose_headers = ["keep-alive", "date"]
   }
 }
@@ -173,8 +204,9 @@ resource "aws_lambda_function_url" "save-url" {
 
   cors {
     allow_credentials = true
-    allow_origins = ["*"]
+    allow_origins = ["http://localhost:3000"]
     allow_methods = ["POST"]
+    allow_headers = ["content-type", "authorization"]
     expose_headers = ["keep-alive", "date"]
   }
 }

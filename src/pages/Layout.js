@@ -1,4 +1,4 @@
-import {Outlet, useNavigate} from 'react-router-dom';
+import {Outlet, useNavigate, useParams, useLocation} from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import './Layout.css';
@@ -11,8 +11,19 @@ function Layout() {
 
     const [ user, setUser ] = useState([]);
     const [ profile, setProfile ] = useState([]);
-    
+
     const navigate = useNavigate();
+
+    const [ email, setEmail ] = useState("");
+
+
+   useEffect(() => {
+        console.log(profile)
+        if (profile === null) {
+            logOut();
+            navigate('/login');
+        }
+   }, []);
 
     useEffect(() => {
         //redirect to /notes by default
@@ -22,11 +33,12 @@ function Layout() {
             navigate('/notes');
         }
             
-        else if (profile === null || profile === undefined || profile === []) {
-            console.log("Profile: " + JSON.parse(profile));
+        if (profile === []) {
+            logOut();
             navigate('/login');
         }
-    }, [profile]);
+
+    }, [profile, ]);
     
     const toggleNoteNav = () => {
         //toggles note navigation sidebar
@@ -38,6 +50,11 @@ function Layout() {
             nav.style.display = "none";
         }        
     }
+
+    const login = useGoogleLogin({
+        onSuccess: (codeRespone) => setUser(codeRespone),
+        onError: (error) => console.log('Login failed:', error),
+    });
 
     useEffect(
         () => {
@@ -52,19 +69,16 @@ function Layout() {
                     .then((res) => {
                         setProfile(res.data);
                     })
-                    .catch((err) => console.log(err));
+                    .catch((err) => {console.log(err); logOut(); navigate('/login')});
             }
             
         }, [user] );
 
-    const login = useGoogleLogin({
-        onSuccess: (codeRespone) => setUser(codeRespone),
-        onError: (error) => console.log('Login failed:', error),
-    });
-
+    
     const logOut = () => {
         googleLogout();
         setProfile(null);
+        navigate('/login')
     };
 
     return (
@@ -77,12 +91,18 @@ function Layout() {
                     <h4>Like Notion, but worse</h4>
                 </div>
                 <div className='login-container'>
-                    {profile ? (<button onClick={logOut}>Log out</button>) : (<button onClick={login}>Log in</button>)}
+                    {profile ? (<button onClick={() => logOut()}>Log out</button>) : (<button onClick={() => login()}>Log in</button>)}
                 </div>
             </div>
 
             <div className='outlet-content'>
-                <Outlet context={[login, logOut]} />                
+                <Outlet context={[
+                    login,
+                    logOut,
+                    user, 
+                    profile,
+                    setProfile
+                ]}/>                
             </div>
 
         </div>
