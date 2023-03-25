@@ -70,7 +70,7 @@ function Notes() {
             logOut();
             return;
         }
-        const url = 'https://sgejw7hxcl2axnzjjdmlmai6ua0wghyw.lambda-url.ca-central-1.on.aws/?email=' + profile.email;
+        const url = 'https://i5bqqkwm67werh35y5fydyphce0ekbau.lambda-url.ca-central-1.on.aws/?email=' + profile.email;
         fetch(url, getOptions)
         .then(res =>  res.json())
         .then(data => {

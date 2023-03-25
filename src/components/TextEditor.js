@@ -97,7 +97,7 @@ function TextEditor() {
       
     console.log("Email in texteditor: " + profile.email);
     console.log("Token in texteditor: " + user);
-    fetch("https://gf4wtjogzcubvg7ix4262gphjm0coeto.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
+    fetch("https://5q4vabw7xtv2cn7t5djmy23ocy0sqepv.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
     .then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -137,7 +137,7 @@ function TextEditor() {
       }),
     }
 
-    fetch("https://ewizljkbzulolp2odlimtrdakm0snxnp.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
+    fetch("https://dfgetdoztkln3oismrmapfb5lm0rnoow.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
     .then((response) => response.json())
     .then((data) => {
       console.log("Success");

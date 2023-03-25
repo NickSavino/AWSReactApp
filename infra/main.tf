@@ -54,6 +54,35 @@ resource "aws_iam_role" "lotion-plus" {
 EOF
 }
 
+# resource "aws_iam_user_policy" "dynamo-perms" {
+#   name = "dynamo-perms"
+
+#   policy = <<EOF
+#   {
+#     "Version": "2012-10-17",
+#     "Statement": [
+#         {
+#             "Sid": "VisualEditor0",
+#             "Effect": "Allow",
+#             "Action": [
+#                 "dynamodb:PutItem",
+#                 "dynamodb:DeleteItem",
+#                 "dynamodb:GetItem",
+#                 "dynamodb:Query",
+#                 "dynamodb:UpdateItem"
+#             ],
+#             "Resource": "arn:aws:dynamodb:ca-central-1:214547864366:table/lotion-30129329"
+#         }
+#     ]
+# }
+# EOF
+# }
+
+# resource "aws_iam_user_policy_attachment" "dynamo-perms" {
+#   role = aws_iam_role.lotion-plus.arn
+#   policy_arn = aws_iam_role_policy.dynamo-perms.arn
+# }
+
 resource "aws_iam_policy" "url-invoke" {
   name = "lamba-url-invoke"
   description = "Allow lambda to invoke other lambda functions"
@@ -86,34 +115,7 @@ resource "aws_iam_role_policy_attachment" "url-invoke" {
   policy_arn = aws_iam_policy.url-invoke.arn
 }
 
-resource "aws_iam_policy" "dynamo-permissions" {
-  name = "dynamo-permissions"
-  description = "Allow lambda to access dynamo db"
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "dynamodb:PutItem",
-                "dynamodb:DeleteItem",
-                "dynamodb:GetItem",
-                "dynamodb:Scan",
-                "dynamodb:UpdateItem"
-            ],
-            "Resource": "arn:aws:dynamodb:ca-central-1:214547864366:table/lotion-30129329"
-        }
-    ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy_attachment" "dynamo-permissions" {
-  role       = aws_iam_role.lotion-plus.name
-  policy_arn = aws_iam_policy.dynamo-permissions.arn
-}
 
 #  delete note lambda function
 resource "aws_lambda_function" "delete-note" {

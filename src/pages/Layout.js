@@ -15,6 +15,7 @@ function Layout() {
     const navigate = useNavigate();
 
     const [ email, setEmail ] = useState("");
+    
 
 
    useEffect(() => {

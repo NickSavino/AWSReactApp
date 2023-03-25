@@ -121,7 +121,7 @@ function TextViewer() {
       }),
     }
 
-    fetch("https://ewizljkbzulolp2odlimtrdakm0snxnp.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
+    fetch("https://dfgetdoztkln3oismrmapfb5lm0rnoow.lambda-url.ca-central-1.on.aws/?email=" + profile.email, options)
     .then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -133,8 +133,8 @@ function TextViewer() {
       console.log(data);
     })
     .catch(error => console.log(error));
-
-    setNotes(notes.filter((note) => note.props.noteData.id !== currentNote.id))
+    const new_notes = notes.filter((note) => note.props.noteData.id !== currentNote.id)
+    setNotes(new_notes)
     navigate("/notes")
   }
   
